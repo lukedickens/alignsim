@@ -156,3 +156,37 @@ def calculate_geirhos_metrics(geirhos_mtx):
         'c_obs': c_obs,
         'kappa': kappa
     }
+    
+import numpy as np
+
+def calculate_geirhos_from_validations(validations1, validations2):
+    """
+    Constructs a 2x2 Geirhos error matrix from binary accuracy arrays.
+    
+    Args:
+        validations1 (np.array): Binary array (1=Correct, 0=Incorrect) for Ann 1.
+        validations2 (np.array): Binary array (1=Correct, 0=Incorrect) for Ann 2.
+        
+    Returns:
+        np.array: 2x2 matrix [[Both_Inc, Ann1Inc_Ann2Corr],
+                             [Ann1Corr_Ann2Inc, Both_Corr]]
+    """
+    # 1. Ensure inputs are numpy arrays for boolean indexing
+    r1 = np.array(validations1)
+    r2 = np.array(validations2)
+    
+    # 2. Calculate counts for the four cells
+    both_correct = np.sum((r1 == 1) & (r2 == 1))
+    ann1_corr_ann2_inc = np.sum((r1 == 1) & (r2 == 0))
+    ann1_inc_ann2_corr = np.sum((r1 == 0) & (r2 == 1))
+    both_incorrect = np.sum((r1 == 0) & (r2 == 0))
+    
+    # 3. Construct the matrix in the Geirhos orientation
+    geirhos_matrix = np.array([
+        [both_incorrect, ann1_inc_ann2_corr],
+        [ann1_corr_ann2_inc, both_correct]
+    ])
+    
+    return geirhos_matrix
+
+
