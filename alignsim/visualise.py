@@ -59,7 +59,8 @@ def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None)
     
 def plot_latent_facility_ec_experiment(
         df_sim,
-        variance,
+        variance=None,
+        evidence=None,
         figsize=(10, 6)
 ):
     plt.figure(figsize=figsize)
@@ -74,7 +75,11 @@ def plot_latent_facility_ec_experiment(
     plt.plot(x_vals, y_vals, color='red', linewidth=2, label='Trend Line')
     plt.xlabel('Mean Item Facility ($\mu$)')
     plt.ylabel('Error Consistency ($\kappa$)')
-    plt.title(
-        f'Effect of Accuracy on EC with latent facility variance ({variance})')
+    if variance:
+        plt.title(
+            f'Effect of Accuracy on EC with latent facility variance ({variance})')
+    elif evidence:
+        plt.title(
+            f'Effect of Accuracy on EC with latent facility evidence ({evidence})')
     plt.legend()
 

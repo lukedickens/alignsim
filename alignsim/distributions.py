@@ -19,3 +19,17 @@ def get_beta_dist(mu, var, fragile=True, rtol=1e-3):
     
     return beta(alpha_param, beta_param)
 
+
+def get_beta_dist_from_evidence(mu, evidence, fragile=True, rtol=1e-3):
+    """
+    Creates a scipy.stats beta distribution from a mean and variance.
+    """
+    # Safety check for variance
+    if evidence <= 0:
+        raise ValueError(f"evidence {evidence} is too low")
+    # Calculate alpha and beta
+    alpha_param = mu * evidence
+    beta_param = (1 - mu) * evidence
+    
+    return beta(alpha_param, beta_param)
+
