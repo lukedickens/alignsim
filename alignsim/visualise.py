@@ -2,6 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+def plot_agreement_from_shared_latent_facilities(p_samples, validations1, validations2):
+    N = p_samples.size
+
+    reorder = np.argsort(p_samples)
+    p_samples = p_samples[reorder]
+    validations1 = validations1[reorder]
+    validations2 = validations2[reorder]
+    
+    # 3. Plotting
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 8), gridspec_kw={'width_ratios': [1, 4]})
+    
+    # Left bar: The latent probability (the 'Difficulty' gradient)
+    ax1.imshow(p_samples[:, np.newaxis], aspect='auto', cmap='RdYlGn', interpolation='nearest')
+    ax1.set_title("Latent $p_i$")
+    ypositions = np.linspace(0,N,6).astype(int)[:-1]
+    print(f"ypositions = {ypositions}")
+    ax1.set_yticks(ypositions, np.round(p_samples[ypositions],3))
+    ax1.set_xticks([])
+    ax1.set_ylabel("Sample Facility (1 - Difficulty)")
+    
+    # Right heatmap: Annotator Outcomes
+    data = np.stack([validations1, validations2], axis=1)
+    ax2.imshow(data, aspect='auto', cmap='Reds_r', interpolation='nearest') # Red = Incorrect (0)
+    ax2.set_xticks([0, 1])
+    ax2.set_xticklabels(['System 1', 'System 2'])
+    ax2.set_title("Outcomes\n(White=Correct, Red=Error)")
+    
+    plt.tight_layout()
 
 def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None):
     """
@@ -61,25 +89,33 @@ def plot_latent_facility_ec_experiment(
         df_sim,
         variance=None,
         evidence=None,
-        figsize=(10, 6)
+        mean=None,
+        figsize=(10, 6),
+        reuse_figure=False
 ):
-    plt.figure(figsize=figsize)
-    plt.scatter(df_sim['mean_accuracy'], df_sim['kappa'], alpha=0.3, s=10, label='Trials')
+    if not reuse_figure:
+        plt.figure(figsize=figsize)
+    if variance:
+        title = f'Effect of Accuracy on EC with latent facility variance ({variance})'
+        inputvar = 'mean_accuracy'
+    elif evidence:
+        title = f'Effect of Accuracy on EC with latent facility evidence ({evidence})'
+        inputvar = 'mean_accuracy'
+    elif mean:
+        title = f'Effect of Evidence on EC with latent facility mean ({mean})'
+        inputvar = 'evidence'
+    inputs = df_sim[inputvar]
+    points = plt.scatter(inputs, df_sim['kappa'], alpha=0.3, s=10, label='Trials')
     # Group by mean_accuracy and calculate the mean kappa for each group
-    trend = df_sim.groupby('mean_accuracy')['kappa'].mean()
+    trend = df_sim.groupby(inputvar)['kappa'].mean()
 
     # Convert the index and values to numpy arrays to avoid the indexing error
     x_vals = trend.index.to_numpy()
     y_vals = trend.values # .values is already an array, but .to_numpy() is safer
 
-    plt.plot(x_vals, y_vals, color='red', linewidth=2, label='Trend Line')
+    plt.plot(x_vals, y_vals, color=points.get_edgecolor(), linewidth=2, label='Trend Line')
     plt.xlabel('Mean Item Facility ($\mu$)')
     plt.ylabel('Error Consistency ($\kappa$)')
-    if variance:
-        plt.title(
-            f'Effect of Accuracy on EC with latent facility variance ({variance})')
-    elif evidence:
-        plt.title(
-            f'Effect of Accuracy on EC with latent facility evidence ({evidence})')
+    plt.title(title)
     plt.legend()
 

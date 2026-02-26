@@ -5,7 +5,7 @@ from alignsim.simulate import (
     generate_uniform_confusion_matrix, 
     generate_annotations, 
     generate_fixed_accuracy_annotations,
-    generate_latent_bernoulli_results
+    generate_shared_latent_facility_validations
 )
 from alignsim.calculate import (
     calculate_3d_agreement,
@@ -16,7 +16,7 @@ from alignsim.calculate import (
 )
 
 from alignsim.distributions import (
-    get_beta_dist,
+    get_beta_dist_from_variance,
     get_beta_dist_from_evidence
 )
 
@@ -53,7 +53,7 @@ def run_fixed_variance_latent_facility_experiment(means, fixed_var, N=1000, n_tr
     
     for mu in means:
         try: 
-            dist = get_beta_dist(mu, fixed_var)
+            dist = get_beta_dist_from_variance(mu, fixed_var)
         except:
             dist = None
             
@@ -61,7 +61,7 @@ def run_fixed_variance_latent_facility_experiment(means, fixed_var, N=1000, n_tr
             continue
             
         for _ in range(n_trials):
-            p_samples, val1, val2  = generate_latent_bernoulli_results(N, dist)
+            p_samples, val1, val2  = generate_shared_latent_facility_validations(N, dist)
             
             # 2. Calculate Geirhos Matrix & Kappa
             mtx = calculate_geirhos_from_validations(val1, val2)
@@ -90,13 +90,42 @@ def run_fixed_evidence_latent_facility_experiment(means, fixed_evidence, N=1000,
             continue
             
         for _ in range(n_trials):
-            p_samples, val1, val2  = generate_latent_bernoulli_results(N, dist)
+            p_samples, val1, val2  = generate_shared_latent_facility_validations(N, dist)
             
             # 2. Calculate Geirhos Matrix & Kappa
             mtx = calculate_geirhos_from_validations(val1, val2)
             kappa = calculate_geirhos_metrics(mtx)['kappa']
             
             results.append({'mean_accuracy': mu, 'kappa': kappa})
+            
+    return pd.DataFrame(results)
+
+def run_fixed_mean_latent_facility_experiment(evidences, fixed_mean, N=1000, n_trials=50):
+    """
+    Runs a simulation sweeping through mean accuracies with fixed variance.
+    Calculates Error Consistency (Kappa) for shared item difficulty.
+    """
+    results = []
+    
+    for evidence in evidences:
+        try: 
+            dist = get_beta_dist_from_evidence(fixed_mean, evidence)
+        except e:
+            print(f"error {e}")
+            raise ValueError("Cannot create dist")
+#            dist = None
+            
+        if dist is None: # Skip if variance is mathematically impossible for the mean
+            continue
+            
+        for _ in range(n_trials):
+            p_samples, val1, val2  = generate_shared_latent_facility_validations(N, dist)
+            
+            # 2. Calculate Geirhos Matrix & Kappa
+            mtx = calculate_geirhos_from_validations(val1, val2)
+            kappa = calculate_geirhos_metrics(mtx)['kappa']
+            
+            results.append({'evidence': evidence, 'kappa': kappa})
             
     return pd.DataFrame(results)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import beta
 
-def get_beta_dist(mu, var, fragile=True, rtol=1e-3):
+def get_beta_dist_from_variance(mu, var, fragile=True, rtol=1e-3):
     """
     Creates a scipy.stats beta distribution from a mean and variance.
     """

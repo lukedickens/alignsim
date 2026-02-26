@@ -2,8 +2,7 @@ import numpy as np
 from scipy.stats import multinomial
 from scipy.stats import dirichlet_multinomial
 from scipy.special import gammaln
-
-
+from scipy.stats import norm, beta
     
 def generate_annotations(gt, confusion_matrix):
     """
@@ -108,8 +107,8 @@ def generate_uniform_confusion_matrix(K, accuracy):
     np.fill_diagonal(cm, accuracy)
     
     return cm
-    
-def generate_latent_bernoulli_results(n, distribution):
+
+def generate_shared_latent_facility_validations(n, distribution):
     """
     Generates binary labels (1 for correct, 0 for incorrect) based on 
     item-specific probabilities sampled from a given distribution.
@@ -134,4 +133,46 @@ def generate_latent_bernoulli_results(n, distribution):
     
     return p_samples, results1, results2
 
+def generate_correlated_beta_distributed_samples(n_items, alpha1, beta1, alpha2, beta2, correlation):
+    """
+    Generate correlated Beta-distributed samples using a Gaussian copula.
+    
+    Parameters:
+    -----------
+    n_items : int
+        Number of items (test questions)
+    alpha1, beta1 : float
+        Beta distribution shape parameters for participant 1
+    alpha2, beta2 : float
+        Beta distribution shape parameters for participant 2
+    correlation : float
+        Desired correlation coefficient between participants' item facilities (-1 to 1)
+    
+    Returns:
+    --------
+    facilities1, facilities2 : np.ndarray
+        Arrays of shape (n_items,) containing item facilities for each participant
+    """
+    # Step 1: Generate correlated bivariate normal samples
+    mean = [0, 0]
+    cov = [[1, correlation],
+           [correlation, 1]]
+    
+    normal_samples = np.random.multivariate_normal(mean, cov, size=n_items)
+    
+    # Step 2: Transform to uniform using normal CDF
+    uniform_samples = norm.cdf(normal_samples)
+    
+    # Step 3: Transform to Beta using inverse CDF (quantile function)
+    facilities1 = beta.ppf(uniform_samples[:, 0], alpha1, beta1)
+    facilities2 = beta.ppf(uniform_samples[:, 1], alpha2, beta2)
+    
+    return facilities1, facilities2
+
+
+def generate_validations(item_facilities):
+    """
+    Generate binary correct/incorrect validations based on item facilities.
+    """
+    return (np.random.uniform(size=len(item_facilities)) < item_facilities).astype(int)
 
