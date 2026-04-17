@@ -37,5 +37,6 @@ Thumbs.db
 
 # My Local Data/Experiments (optional)
 # Add these if you want to keep large simulation outputs out of Git
-# data/
-# results/*.csv
+data/
+results/*.csv
+*png

@@ -39,7 +39,9 @@ def run_accuracy_vs_kappa_sim(gt, fixed_acc1, acc2_range, K, n_trials=100):
             
             results.append({
                 'accuracy_2': acc2,
-                'kappa': metrics['kappa']
+                'kappa': metrics['kappa'],
+                'c_exp': metrics['c_exp'],
+                'c_obs': metrics['c_obs']
             })
         
     return pd.DataFrame(results)

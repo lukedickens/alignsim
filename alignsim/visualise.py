@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def plot_agreement_from_shared_latent_facilities(p_samples, validations1, validations2):
+def plot_agreement_from_shared_latent_facilities(p_samples, validations1,
+        validations2, cmap1='RdYlGn', cmap2='viridis'):
     N = p_samples.size
 
     reorder = np.argsort(p_samples)
@@ -14,7 +15,7 @@ def plot_agreement_from_shared_latent_facilities(p_samples, validations1, valida
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 8), gridspec_kw={'width_ratios': [1, 4]})
     
     # Left bar: The latent probability (the 'Difficulty' gradient)
-    ax1.imshow(p_samples[:, np.newaxis], aspect='auto', cmap='RdYlGn', interpolation='nearest')
+    ax1.imshow(p_samples[:, np.newaxis], aspect='auto', cmap=cmap1, interpolation='nearest')
     ax1.set_title("Latent $p_i$")
     ypositions = np.linspace(0,N,6).astype(int)[:-1]
     print(f"ypositions = {ypositions}")
@@ -24,14 +25,15 @@ def plot_agreement_from_shared_latent_facilities(p_samples, validations1, valida
     
     # Right heatmap: Annotator Outcomes
     data = np.stack([validations1, validations2], axis=1)
-    ax2.imshow(data, aspect='auto', cmap='Reds_r', interpolation='nearest') # Red = Incorrect (0)
+    ax2.imshow(data, aspect='auto', cmap=cmap2, interpolation='nearest') # Red = Incorrect (0)
     ax2.set_xticks([0, 1])
-    ax2.set_xticklabels(['System 1', 'System 2'])
-    ax2.set_title("Outcomes\n(White=Correct, Red=Error)")
+    ax2.set_xticklabels(['System A', 'System B'])
+    ax2.set_title("Outcomes")
     
     plt.tight_layout()
 
-def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None):
+def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None,
+    show_colorbar=False, cmap='viridis', figsize=(5,4)):
     """
     Plots a tall heatmap for two annotators with range markers on the left.
     
@@ -44,14 +46,14 @@ def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None)
     n_rows = len(anno1)
     
     # Create figure with a specific aspect ratio for a tall heatmap
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=figsize)
     
     # Display heatmap
-    im = ax.imshow(data, aspect='auto', cmap='viridis', interpolation='nearest')
+    im = ax.imshow(data, aspect='auto', cmap=cmap, interpolation='nearest')
     
     # Formatting columns
     ax.set_xticks([0, 1])
-    ax.set_xticklabels(['Annotator 1', 'Annotator 2'])
+    ax.set_xticklabels(['System A', 'System B'])
     ax.set_yticks([]) # Hide individual row labels
     
     # Draw horizontal lines and range indicators
@@ -81,7 +83,10 @@ def plot_agreement_heatmap(anno1, anno2, block_sizes, block_labels, colors=None)
         
         current_row = end
 
-    plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label='Correct/Incorrect')
+    if show_colorbar:
+        cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        # cbar.ax.set_yticks([0, 1],[r'$\bot$', r'$\top$']) 
+        cbar.ax.set_yticks([0, 1],[r'Incorrect', r'Correct']) 
     plt.tight_layout()
     
     
